@@ -49,7 +49,7 @@ pub trait FmtEr {
         }
     }
     fn multiply(&self, a: &str, b: &str) -> String {
-        if a.ends_with('x') || b.starts_with('x') || a.ends_with(')') && b.starts_with('(') {
+        if a.ends_with(self.x()) || b.starts_with(self.x()) || a.ends_with(')') && b.starts_with('(') {
             format!("{}{}", a, b)
         }
         else {
@@ -95,7 +95,7 @@ pub mod formatters {
     pub struct Unicode;
     impl FmtEr for Unicode {
         fn multiply(&self, a: &str, b: &str) -> String {
-            if a.ends_with('x') || b.starts_with('x') || a.ends_with(')') && b.starts_with('(') {
+            if a.ends_with(self.x()) || b.starts_with(self.x()) || a.ends_with(')') && b.starts_with('(') {
                 format!("{}{}", a, b)
             }
             else {

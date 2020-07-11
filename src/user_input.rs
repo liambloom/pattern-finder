@@ -1,9 +1,6 @@
-use std::io::{self, Write};
+use std::{io::{self, Write}, convert::TryInto, num::ParseIntError};
 use num::rational::Ratio;
 use regex::Regex;
-use std::convert::TryInto;
-use std::error::Error;
-use std::fmt;
 
 pub fn get_pattern() -> Vec<Ratio<isize>> {
     let mut pattern = String::new();
@@ -26,7 +23,7 @@ pub fn get_pattern() -> Vec<Ratio<isize>> {
     vec
 }
 
-fn parse(mut s: &str) -> Result<Ratio<isize>, ParseNumberError> {
+fn parse(mut s: &str) -> Result<Ratio<isize>, ParseIntError> {
     s = s.trim();
     if Regex::new(r"^-?\d*\.?\d+$").unwrap().is_match(s) {
         Ok(match s.find('.') {
@@ -38,16 +35,16 @@ fn parse(mut s: &str) -> Result<Ratio<isize>, ParseNumberError> {
                     s = &s[1..s.len()];
                     index -= 1;
                 }
-                let ratio = (   if index == 0 { num::zero() }
-                    else { Ratio::from_integer((&s[0..index]).parse().unwrap())} )
+                let ratio = ( if index == 0 { num::zero() }
+                    else { Ratio::from_integer((&s[0..index]).parse()?) } )
                 + Ratio::new(
-                    (&s[index + 1..s.len()]).parse().unwrap(), 
+                    (&s[index + 1..s.len()]).parse()?, 
                     10isize.pow((s.len() - index - 1).try_into().unwrap())
                 );
                 let neg = if negative { -1 } else { 1 };
                 ratio * neg
             },
-            None => Ratio::from_integer(s.parse().unwrap()),
+            None => Ratio::from_integer(s.parse()?),
         })
     }
     else if Regex::new(format!(r"^(?:-?\d+\s+)?-?\d\s*/\s*-?\d$",).as_str()).unwrap().is_match(s) {
@@ -56,40 +53,18 @@ fn parse(mut s: &str) -> Result<Ratio<isize>, ParseNumberError> {
         let whole;
 
         if matches.len() == 3 {
-            whole = Ratio::from_integer(matches.remove(0).as_str().parse().unwrap());
+            whole = Ratio::from_integer(matches.remove(0).as_str().parse()?);
         }
         else {
             whole = num::zero();
         }
         assert_eq!(matches.len(), 2);
-        Ok(whole + Ratio::new(matches[0].as_str().parse().unwrap(), matches[1].as_str().parse().unwrap()))
+        Ok(whole + Ratio::new(matches[0].as_str().parse()?, matches[1].as_str().parse()?))
     }
     else {
-        Err(ParseNumberError {
-            number: s
-        })
-    }
-    /*if s.contains(' ') {
-        for term in s.split_whitespace() {
-
+        match s.parse::<u32>() {
+            Ok(_parsed) => panic!("This should never happen"),
+            Err(err) => Err(err),
         }
-    }
-    Ratio::new(1, 2) + Ratio::new(1, 2)*/
-}
-
-#[derive(Debug)]
-struct ParseNumberError<'a> {
-    number: &'a str
-}
-
-impl fmt::Display for ParseNumberError<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Error: {} is not a valid number", self.number)
-    }
-}
-
-impl Error for ParseNumberError<'_> {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
     }
 }

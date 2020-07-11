@@ -3,10 +3,15 @@ mod user_input;
 mod util;
 mod fmt;
 
-use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use std::io::{stdout, Write};
+use crossterm::{
+    event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
+    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    cursor::MoveUp,
+    execute
+};
 use polynomial::Polynomial;
-use fmt::{FmtAble, FmtEnum};
+use fmt::{FmtEnum, formatters};
 
 fn main() {
     println!("Please choose a display mode:");
@@ -29,43 +34,47 @@ fn main() {
                 code: KeyCode::Char('1'),
                 modifiers: _these_identifiers_are_not_defined,
             }) => {
-                default_fmt = FmtEnum::Unicode;
+                default_fmt = FmtEnum::Unicode(formatters::Unicode);
                 break;
             },
             Event::Key(KeyEvent {
                 code: KeyCode::Char('2'),
                 modifiers: _they_should_throw_errors,
             }) => {
-                default_fmt = FmtEnum::ASCII;
+                default_fmt = FmtEnum::ASCII(formatters::ASCII);
                 break;
             },
             Event::Key(KeyEvent {
                 code: KeyCode::Char('3'),
                 modifiers: _why_do_these_work,
             }) => {
-                default_fmt = FmtEnum::Java_JS;
+                default_fmt = FmtEnum::Java_JS(formatters::Java_JS);
                 break;
             },
             Event::Key(KeyEvent {
                 code: KeyCode::Char('4'),
                 modifiers: _seriously_how_does_this_compile,
             }) => {
-                default_fmt = FmtEnum::LaTeX;
+                default_fmt = FmtEnum::LaTeX(formatters::LaTeX);
                 break;
             },
             _ => (),
         }
     }
 
+    execute!(
+        stdout(),
+        MoveUp(4),
+        Clear(ClearType::FromCursorDown)
+    ).unwrap();
+
     disable_raw_mode().unwrap();
 
     loop {
-        let polynomial = Polynomial::from_values(&user_input::get_pattern()).unwrap();
-        println!("{}", match &default_fmt {
-            FmtEnum::_Unicode(r) => polynomial.format(r),
-            FmtEnum::_ASCII(r) => polynomial.format(r),
-            FmtEnum::_Java_JS(r) => polynomial.format(r),
-            FmtEnum::_LaTeX(r) => polynomial.format(r),
-        });
+        let pattern = user_input::get_pattern();
+        match Polynomial::from_values(&pattern) {
+            Some(polynomial) => default_fmt.print(&polynomial),
+            None => println!("No pattern found"),
+        }
     }
 }

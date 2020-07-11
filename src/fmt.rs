@@ -26,36 +26,6 @@ pub fn superscript(num: i32) -> String {
     }
     s
 }
-/*pub fn subscript(num: i32) -> String {
-    let mut s = String::new();
-    if num < 0 {
-        s.push('₋');
-    }
-    let num = num.abs() as u32;
-    for i in (1..max((num as f64).log(10.0).ceil() as u32 + 1, 2)).rev() {
-        s.push(char::from_u32(0x2080 + num % 10u32.pow(i) / 10u32.pow(i - 1)).unwrap());
-    }
-    s
-}
-pub fn italicize(s: &mut String) { // This replaces letters with the unicode Mathematical Italic version of the letter
-    let mut italic = String::with_capacity(s.len());
-
-    for c in s.chars() {
-        let ascii = c as u32;
-        if ascii >= b'A' as u32 && ascii <= b'Z' as u32 {
-            italic.push(char::from_u32(0x1D434 + ascii - (b'A' as u32)).unwrap());
-        }
-        else if ascii >= b'a' as u32 && ascii <= b'z' as u32 {
-            italic.push(char::from_u32(0x1D44E + ascii - (b'a' as u32)).unwrap())
-        }
-        else {
-            italic.push(c);
-        }
-    }
-
-    *s = italic;
-}*/
-
 
 pub trait FmtAble {
     fn format(&self, f: &impl FmtEr) -> String;
@@ -159,17 +129,25 @@ pub mod formatters {
 
 #[derive(Debug)]
 pub enum FmtEnum {
-    _Unicode(formatters::Unicode),
-    _ASCII(formatters::ASCII),
+    Unicode(formatters::Unicode),
+    ASCII(formatters::ASCII),
     #[allow(non_camel_case_types)]
-    _Java_JS(formatters::Java_JS),
-    _LaTeX(formatters::LaTeX),
+    Java_JS(formatters::Java_JS),
+    LaTeX(formatters::LaTeX),
 }
 
 #[allow(non_upper_case_globals)]
 impl FmtEnum {
-    pub const Unicode: FmtEnum = FmtEnum::_Unicode(formatters::Unicode);
+    /*pub const Unicode: FmtEnum = FmtEnum::_Unicode(formatters::Unicode);
     pub const ASCII: FmtEnum = FmtEnum::_ASCII(formatters::ASCII);
     pub const Java_JS: FmtEnum = FmtEnum::_Java_JS(formatters::Java_JS);
-    pub const LaTeX: FmtEnum = FmtEnum::_LaTeX(formatters::LaTeX);
+    pub const LaTeX: FmtEnum = FmtEnum::_LaTeX(formatters::LaTeX);*/
+    pub fn print(&self, p: &impl FmtAble) {
+        println!("{}", match self {
+            FmtEnum::Unicode(e) => p.format(e),
+            FmtEnum::ASCII(e) => p.format(e),
+            FmtEnum::Java_JS(e) => p.format(e),
+            FmtEnum::LaTeX(e) => p.format(e),
+        });
+    }
 }

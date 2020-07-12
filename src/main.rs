@@ -3,72 +3,25 @@ mod user_input;
 mod fmt;
 mod util;
 
-use std::io::{stdout, Write};
+use std::io::{stdin, stdout, Write};
 use crossterm::{
-    event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
-    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    terminal::{Clear, ClearType},
     cursor::MoveUp,
     execute
 };
 use polynomial::Polynomial;
 use fmt::{FmtEnum, formatters};
+use indexmap::map::IndexMap;
 
 fn main() {
-    println!("Please choose a display mode:");
-    println!("1. Unicode - Best looking, but may cause rendering errors");
-    println!("2. ASCII - Use this to avoid rendering errors");
-    println!("3. Java/JS - Equations are printed as java/javascript code");
-    println!("4. LaTeX - This is the standard used by many online calculators");
+    let mut fmter_map = IndexMap::new();
 
-    enable_raw_mode().unwrap();
+    fmter_map.insert(String::from("Unicode - Best looking, but may cause rendering errors"), &FmtEnum::Unicode(formatters::Unicode));
+    fmter_map.insert(String::from("ASCII - Use this to avoid rendering errors"), &FmtEnum::ASCII(formatters::ASCII));
+    fmter_map.insert(String::from("Java/JS - Equations are printed as java/javascript code"), &FmtEnum::Java_JS(formatters::Java_JS));
+    fmter_map.insert(String::from("LaTeX - This is the standard used by many online calculators"), &FmtEnum::LaTeX(formatters::LaTeX));
 
-    let default_fmt;
-
-    loop {
-        match read().unwrap() {
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('c'),
-                modifiers: KeyModifiers::CONTROL,
-            }) => std::process::exit(1),
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('1'),
-                modifiers: _these_identifiers_are_not_defined,
-            }) => {
-                default_fmt = FmtEnum::Unicode(formatters::Unicode);
-                break;
-            },
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('2'),
-                modifiers: _they_should_throw_errors,
-            }) => {
-                default_fmt = FmtEnum::ASCII(formatters::ASCII);
-                break;
-            },
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('3'),
-                modifiers: _why_do_these_work,
-            }) => {
-                default_fmt = FmtEnum::Java_JS(formatters::Java_JS);
-                break;
-            },
-            Event::Key(KeyEvent {
-                code: KeyCode::Char('4'),
-                modifiers: _seriously_how_does_this_compile,
-            }) => {
-                default_fmt = FmtEnum::LaTeX(formatters::LaTeX);
-                break;
-            },
-            _ => (),
-        }
-    }
-
-    execute!(
-        stdout(),
-        MoveUp(5),
-        Clear(ClearType::FromCursorDown),
-    ).unwrap();
-
-    disable_raw_mode().unwrap();
+    let default_fmt = menu("Please choose a display mode", &fmter_map);
 
     loop {
         let pattern = user_input::get_pattern();
@@ -76,5 +29,42 @@ fn main() {
             Some(polynomial) => default_fmt.print(&polynomial),
             None => println!("No pattern found"),
         }
+    }
+}
+
+fn menu<'a, T>(prompt: &str, options: &IndexMap<String, &'a T>) -> &'a T {
+    println!("{}:", prompt);
+    let lines = options.len() as u16 + 1;
+    let mut values = Vec::new();
+    let mut err = 0;
+    for option in options.into_iter().enumerate() {
+        values.push((option.1).1);
+        println!("{}. {}", option.0 + 1, (option.1).0);
+    };
+    loop {
+        let mut res = String::new();
+        stdin()
+            .read_line(&mut res)
+            .expect("Could not read user input");
+        res = String::from(res.trim());
+        if let Ok(i) = res.parse::<usize>() {
+            if i != 0 {
+                if let Some(e) = values.get(i - 1) {
+                    execute!(
+                        stdout(),
+                        MoveUp(lines + 1 + err),
+                        Clear(ClearType::FromCursorDown),
+                    ).unwrap();
+                    return e;
+                }
+            }
+        }
+        execute!(
+            stdout(),
+            MoveUp(1 + err),
+            Clear(ClearType::FromCursorDown),
+        ).unwrap();
+        println!("{} is not an available option", res);
+        err = 1;
     }
 }

@@ -2,7 +2,7 @@ use std::{io::{self, Write}, convert::TryInto, num::ParseIntError};
 use num::rational::Ratio;
 use regex::Regex;
 
-pub fn get_pattern() -> Vec<Ratio<isize>> {
+pub fn get_pattern() -> Vec<Ratio<i32>> {
     let mut pattern = String::new();
     print!("Pattern: ");
     io::stdout().flush().expect("Unable to flush buffer");
@@ -10,7 +10,7 @@ pub fn get_pattern() -> Vec<Ratio<isize>> {
         .read_line(&mut pattern)
         .expect("Could not read user input");
     let parsed = pattern.split(',').map(parse);
-    let mut vec: Vec<Ratio<isize>> = Vec::new();
+    let mut vec: Vec<Ratio<i32>> = Vec::new();
     for p in parsed {
         match p {
             Ok(ratio) => vec.push(ratio),
@@ -23,7 +23,7 @@ pub fn get_pattern() -> Vec<Ratio<isize>> {
     vec
 }
 
-fn parse(mut s: &str) -> Result<Ratio<isize>, ParseIntError> {
+fn parse(mut s: &str) -> Result<Ratio<i32>, ParseIntError> {
     s = s.trim();
     if Regex::new(r"^-?\d*\.?\d+$").unwrap().is_match(s) {
         Ok(match s.find('.') {
@@ -39,7 +39,7 @@ fn parse(mut s: &str) -> Result<Ratio<isize>, ParseIntError> {
                     else { Ratio::from_integer((&s[0..index]).parse()?) } )
                 + Ratio::new(
                     (&s[index + 1..s.len()]).parse()?, 
-                    10isize.pow((s.len() - index - 1).try_into().unwrap())
+                    10i32.pow((s.len() - index - 1).try_into().unwrap())
                 );
                 let neg = if negative { -1 } else { 1 };
                 ratio * neg
@@ -58,7 +58,7 @@ fn parse(mut s: &str) -> Result<Ratio<isize>, ParseIntError> {
             whole = num::zero();
         }
         assert_eq!(matches.len(), 2);
-        Ok(whole + Ratio::new(if s.starts_with('-') { -1 } else { 1 } * num::abs(matches[0].as_str().parse::<isize>()?), matches[1].as_str().parse()?))
+        Ok(whole + Ratio::new(if s.starts_with('-') { -1 } else { 1 } * num::abs(matches[0].as_str().parse::<i32>()?), matches[1].as_str().parse()?))
     }
     else {
         match s.parse::<u32>() {

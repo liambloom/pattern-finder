@@ -1,3 +1,6 @@
+#[cfg(test)]
+use num::rational::Ratio;
+
 pub fn all_equal(vec: &Vec<impl PartialEq>) -> bool {
     let prev = &vec[0];
     for e in vec {
@@ -6,6 +9,15 @@ pub fn all_equal(vec: &Vec<impl PartialEq>) -> bool {
         }
     }
     true
+}
+
+#[cfg(test)] 
+pub fn as_ratios(vec: Vec<i32>) -> Vec<Ratio<i32>> { // Not a test, just used by tests
+    let mut new = Vec::new();
+    for int in vec.iter() {
+        new.push(Ratio::from_integer(*int));
+    }
+    new
 }
 
 #[cfg(test)]

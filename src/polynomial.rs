@@ -7,7 +7,7 @@ pub struct Polynomial {
     terms: Vec<Term>,
 }
 impl Polynomial {
-    pub fn from_values(values: &Vec<Ratio<isize>>) -> Option<Self> {
+    pub fn from_values(values: &Vec<Ratio<i32>>) -> Option<Self> {
         if values.len() < 2 {
             None
         }
@@ -26,9 +26,9 @@ impl Polynomial {
             if p.terms[0].coefficient != num::zero() {
                 let mut divided = Vec::new();
                 for i in values.iter().enumerate() {
-                    divided.push(i.1 - p.terms[0].apply(&(i.0 as isize)));
+                    divided.push(i.1 - p.terms[0].apply(&(i.0 as i32)));
                 }
-                let mut sub = Self::from_values(&divided).unwrap_or_else(|| Self::EMPTY).terms;
+                let mut sub = Self::from_values(&divided).unwrap_or(Self { terms: Vec::new() }).terms;
                 if sub.len() == 1 && sub[0].coefficient == num::zero() {
                     sub = Vec::new();
                 }
@@ -37,11 +37,9 @@ impl Polynomial {
             Some(p)
         }
     }
-    const EMPTY: Self = Self { terms: Vec::new() };
 }
 impl FmtAble for Polynomial {
     fn format(&self, f: &impl FmtEr) -> String {
-        println!("{:?}", &self.terms);
         let mut iter = self.terms.iter();
         let mut s: String = iter.next().unwrap().format(f);
         for term in iter {
@@ -58,15 +56,15 @@ impl FmtAble for Polynomial {
 
 #[derive(Debug)]
 struct Term {
-    pub coefficient: Ratio<isize>,
+    pub coefficient: Ratio<i32>,
     pub exponent: u8,
 }
 impl Term {
-    pub fn from_values(values: &Vec<Ratio<isize>>) -> Option<Self> {
+    pub fn from_values(values: &Vec<Ratio<i32>>) -> Option<Self> {
         if values.len() < 3 {
             return None
         }
-        let mut diffs: Vec<Ratio<isize>> = Vec::new();
+        let mut diffs: Vec<Ratio<i32>> = Vec::new();
         for i in 0..values.len() - 1 {
             diffs.push(values[i + 1] - values[i]);
         };
@@ -79,14 +77,14 @@ impl Term {
         else {
             let mut rec = Term::from_values(&diffs)?;
             rec.exponent += 1;
-            rec.coefficient /= Ratio::from_integer(rec.exponent as isize);
+            rec.coefficient /= Ratio::from_integer(rec.exponent as i32);
             Some(rec)
         }
     }
-    pub fn apply(&self, x: &isize) -> Ratio<isize> {
+    pub fn apply(&self, x: &i32) -> Ratio<i32> {
         self.apply_ratio(&Ratio::from_integer(*x))
     }
-    pub fn apply_ratio(&self, x: &Ratio<isize>) -> Ratio<isize> {
+    pub fn apply_ratio(&self, x: &Ratio<i32>) -> Ratio<i32> {
         self.coefficient * x.pow(self.exponent as i32)
     }
 }
@@ -120,15 +118,8 @@ mod tests {
     use super::{Polynomial};
     use crate::fmt::{formatters, FmtAble};
     use num::rational::Ratio;
+    use crate::util::as_ratios;
     const ASCII: formatters::ASCII = formatters::ASCII;
-
-    fn as_ratios(vec: Vec<isize>) -> Vec<Ratio<isize>> { // Not a test, just used by tests
-        let mut new = Vec::new();
-        for int in vec.iter() {
-            new.push(Ratio::from_integer(*int));
-        }
-        new
-    }
 
     mod horizontal {
         use super::*;

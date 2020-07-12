@@ -15,7 +15,7 @@ pub fn get_pattern() -> Vec<Ratio<isize>> {
         match p {
             Ok(ratio) => vec.push(ratio),
             Err(err) => {
-                println!("{}", err);
+                println!("Error: {}", err);
                 return get_pattern();
             }
         }
@@ -47,11 +47,10 @@ fn parse(mut s: &str) -> Result<Ratio<isize>, ParseIntError> {
             None => Ratio::from_integer(s.parse()?),
         })
     }
-    else if Regex::new(format!(r"^(?:-?\d+\s+)?-?\d\s*/\s*-?\d$",).as_str()).unwrap().is_match(s) {
+    else if Regex::new(format!(r"^-?(?:\d+\s+)?\d\s*/\s*-?\d$").as_str()).unwrap().is_match(s) {
         let number_regex =  Regex::new(r"-?\d").unwrap();
-        let mut matches: Vec<_> = number_regex.find_iter(s).collect(); //Vec<<Matches as Iterator>::Item> = 
+        let mut matches: Vec<_> = number_regex.find_iter(s).collect();
         let whole;
-
         if matches.len() == 3 {
             whole = Ratio::from_integer(matches.remove(0).as_str().parse()?);
         }
@@ -59,12 +58,57 @@ fn parse(mut s: &str) -> Result<Ratio<isize>, ParseIntError> {
             whole = num::zero();
         }
         assert_eq!(matches.len(), 2);
-        Ok(whole + Ratio::new(matches[0].as_str().parse()?, matches[1].as_str().parse()?))
+        Ok(whole + Ratio::new(if s.starts_with('-') { -1 } else { 1 } * num::abs(matches[0].as_str().parse::<isize>()?), matches[1].as_str().parse()?))
     }
     else {
         match s.parse::<u32>() {
-            Ok(_parsed) => panic!("This should never happen"),
+            Ok(_parsed) => panic!("Valid number not matched"),
             Err(err) => Err(err),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn whole_number() {
+        assert_eq!(parse("2").unwrap(), Ratio::from_integer(2));
+    }
+
+    #[test]
+    fn decimal() {
+        assert_eq!(parse("1.3").unwrap(), Ratio::new(13, 10));
+    }
+
+    #[test]
+    fn fraction() {
+        assert_eq!(parse("1 / 2").unwrap(), Ratio::new(1, 2));
+    }
+
+    #[test]
+    fn mixed_number() {
+        assert_eq!(parse("1 1/2").unwrap(), Ratio::new(3, 2));
+    }
+
+    #[test]
+    fn negative() {
+        assert_eq!(parse("-2").unwrap(), Ratio::from_integer(-2));
+    }
+
+    #[test]
+    fn negative_decimal() {
+        assert_eq!(parse("-1.3").unwrap(), Ratio::new(-13, 10));
+    }
+
+    #[test]
+    fn negative_fraction() {
+        assert_eq!(parse("-1 / 2").unwrap(), Ratio::new(-1, 2));
+    }
+
+    #[test]
+    fn negative_mixed_number() {
+        assert_eq!(parse("-1 1/2").unwrap(), Ratio::new(-3, 2));
     }
 }

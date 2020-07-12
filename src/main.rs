@@ -1,7 +1,7 @@
 mod polynomial;
 mod user_input;
-mod util;
 mod fmt;
+mod util;
 
 use std::io::{stdout, Write};
 use crossterm::{
@@ -64,8 +64,8 @@ fn main() {
 
     execute!(
         stdout(),
-        MoveUp(4),
-        Clear(ClearType::FromCursorDown)
+        MoveUp(5),
+        Clear(ClearType::FromCursorDown),
     ).unwrap();
 
     disable_raw_mode().unwrap();

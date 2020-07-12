@@ -1,18 +1,18 @@
 use num::rational::Ratio;
-use crate::util;
 use crate::fmt::{FmtEr, FmtAble};
+use crate::util::all_equal;
 
 #[derive(Debug)]
 pub struct Polynomial {
     terms: Vec<Term>,
 }
 impl Polynomial {
-    pub fn from_values(values: &Vec<Ratio<isize>>) -> Option<Polynomial> {
+    pub fn from_values(values: &Vec<Ratio<isize>>) -> Option<Self> {
         if values.len() < 2 {
             None
         }
-        else if util::all_equal(values) {
-            Some(Polynomial {
+        else if all_equal(values) {
+            Some(Self {
                 terms: vec![Term {
                     coefficient: values[0],
                     exponent: 0
@@ -20,7 +20,7 @@ impl Polynomial {
             })
         }
         else {
-            let mut p = Polynomial {
+            let mut p = Self {
                 terms: vec![Term::from_values(values)?],
             };
             if p.terms[0].coefficient != num::zero() {
@@ -28,20 +28,31 @@ impl Polynomial {
                 for i in values.iter().enumerate() {
                     divided.push(i.1 - p.terms[0].apply(&(i.0 as isize)));
                 }
-                p.terms.append(&mut Polynomial::from_values(&divided).unwrap_or_else(|| Polynomial { terms: Vec::new() }).terms);
+                let mut sub = Self::from_values(&divided).unwrap_or_else(|| Self::EMPTY).terms;
+                if sub.len() == 1 && sub[0].coefficient == num::zero() {
+                    sub = Vec::new();
+                }
+                p.terms.append(&mut sub);
             }
             Some(p)
         }
     }
+    const EMPTY: Self = Self { terms: Vec::new() };
 }
 impl FmtAble for Polynomial {
     fn format(&self, f: &impl FmtEr) -> String {
+        println!("{:?}", &self.terms);
         let mut iter = self.terms.iter();
         let mut s: String = iter.next().unwrap().format(f);
         for term in iter {
             s = f.add(s.as_str(), term.format(f).as_str());
         }
-        s
+        if s.is_empty() {
+            String::from("0")
+        }
+        else {
+            s
+        }
     }
 }
 
@@ -51,7 +62,7 @@ struct Term {
     pub exponent: u8,
 }
 impl Term {
-    pub fn from_values(values: &Vec<Ratio<isize>>) -> Option<Term> {
+    pub fn from_values(values: &Vec<Ratio<isize>>) -> Option<Self> {
         if values.len() < 3 {
             return None
         }
@@ -59,7 +70,7 @@ impl Term {
         for i in 0..values.len() - 1 {
             diffs.push(values[i + 1] - values[i]);
         };
-        if util::all_equal(&diffs) {
+        if all_equal(&diffs) {
             Some(Term {
                 coefficient: diffs[0],
                 exponent: 1,
@@ -79,11 +90,6 @@ impl Term {
         self.coefficient * x.pow(self.exponent as i32)
     }
 }
-/*impl fmt::Display for Term {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.format(&Unicode))
-    }
-}*/
 impl FmtAble for Term {
     fn format(&self, f: &impl FmtEr) -> String {
         let mut s = String::new();
@@ -106,5 +112,115 @@ impl FmtAble for Term {
             }
         }
         s
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Polynomial};
+    use crate::fmt::{formatters, FmtAble};
+    use num::rational::Ratio;
+    const ASCII: formatters::ASCII = formatters::ASCII;
+
+    fn as_ratios(vec: Vec<isize>) -> Vec<Ratio<isize>> { // Not a test, just used by tests
+        let mut new = Vec::new();
+        for int in vec.iter() {
+            new.push(Ratio::from_integer(*int));
+        }
+        new
+    }
+
+    mod horizontal {
+        use super::*;
+
+        #[test]
+        fn zero() {
+            let zero = num::zero();
+            assert_eq!(Polynomial::from_values(&vec![zero, zero, zero]).unwrap().format(&ASCII), "0");
+        }
+
+        #[test]
+        fn one() {
+            let one = num::one();
+            assert_eq!(Polynomial::from_values(&vec![one, one, one]).unwrap().format(&ASCII), "1");
+        }
+    }
+    
+    mod linear {
+        use super::*;
+
+        #[test]
+        fn parent() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![0, 1, 2])).unwrap().format(&ASCII), "x");
+        }
+
+        #[test]
+        fn translated() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![1, 2, 3])).unwrap().format(&ASCII), "x+1");
+        }
+
+        #[test]
+        fn stretched() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![0, 2, 4])).unwrap().format(&ASCII), "2x");
+        }
+
+        #[test]
+        fn compressed() {
+            assert_eq!(Polynomial::from_values(&vec![num::zero(), Ratio::new(1, 2), num::one()]).unwrap().format(&ASCII), "(1/2)x");
+        }
+
+        #[test]
+        fn reflected() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![0, -1, -2])).unwrap().format(&ASCII), "-x");
+        }
+
+        #[test]
+        fn all() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![1, -1, -3])).unwrap().format(&ASCII), "-2x+1");
+        }
+    }
+
+    mod quadratic {
+        use super::*;
+
+        #[test]
+        fn parent() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![0, 1, 4, 9])).unwrap().format(&ASCII), "x^2");
+        }
+
+        #[test]
+        fn vertical_translated() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![1, 2, 5, 10])).unwrap().format(&ASCII), "x^2+1");
+        }
+
+        #[test]
+        fn horizontal_translated() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![1, 4, 9, 16])).unwrap().format(&ASCII), "x^2+2x+1");
+        }
+
+        #[test]
+        fn stretched() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![0, 2, 8, 18])).unwrap().format(&ASCII), "2x^2");
+        }
+
+        #[test]
+        fn compressed() {
+            assert_eq!(Polynomial::from_values(&vec![num::zero(), Ratio::new(1, 2), Ratio::from_integer(2), Ratio::new(9, 2)]).unwrap().format(&ASCII), "(1/2)x^2");
+        }
+
+        #[test]
+        fn reflected() {
+            assert_eq!(Polynomial::from_values(&as_ratios(vec![0, -1, -4, -9])).unwrap().format(&ASCII), "-x^2");
+        }
+
+        #[test]
+        fn all() {
+            assert_eq!(Polynomial::from_values(&vec![Ratio::new(-1, 2), Ratio::from_integer(-2), Ratio::new(-9, 2), Ratio::from_integer(-8)]).unwrap().format(&ASCII), "-(1/2)x^2-x-(1/2)");
+        }
+    }
+
+    #[test]
+    fn many_intercepts() {
+        assert_eq!(Polynomial::from_values(&as_ratios(vec![0, 0, 0, 6, 24])).unwrap().format(&ASCII), "x^3-3x^2+2x");
     }
 }

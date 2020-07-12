@@ -136,12 +136,7 @@ pub enum FmtEnum {
     LaTeX(formatters::LaTeX),
 }
 
-#[allow(non_upper_case_globals)]
 impl FmtEnum {
-    /*pub const Unicode: FmtEnum = FmtEnum::_Unicode(formatters::Unicode);
-    pub const ASCII: FmtEnum = FmtEnum::_ASCII(formatters::ASCII);
-    pub const Java_JS: FmtEnum = FmtEnum::_Java_JS(formatters::Java_JS);
-    pub const LaTeX: FmtEnum = FmtEnum::_LaTeX(formatters::LaTeX);*/
     pub fn print(&self, p: &impl FmtAble) {
         println!("{}", match self {
             FmtEnum::Unicode(e) => p.format(e),

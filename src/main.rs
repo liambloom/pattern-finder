@@ -1,4 +1,5 @@
 mod polynomial;
+mod exponential;
 mod user_input;
 mod fmt;
 mod util;
@@ -10,6 +11,7 @@ use crossterm::{
     execute
 };
 use polynomial::Polynomial;
+use exponential::Exponential;
 use fmt::{FmtEnum, formatters};
 use indexmap::map::IndexMap;
 

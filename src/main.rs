@@ -40,9 +40,16 @@ fn menu<'a, T>(prompt: &str, options: &IndexMap<String, &'a T>) -> &'a T {
     let mut values = Vec::new();
     let mut err = 0;
     for option in options.into_iter().enumerate() {
-        values.push((option.1).1);
-        println!("{}. {}", option.0 + 1, (option.1).0);
-    };
+    fmt_menu.hide();
+    let default_fmt = fmt_menu.value();
+
+    terminal::disable_raw_mode().unwrap();
+    execute!(
+        stdout(),
+        MoveUp(3),
+        Clear(ClearType::FromCursorDown),
+        Show,
+    ).unwrap();
     loop {
         let mut res = String::new();
         stdin()

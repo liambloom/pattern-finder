@@ -81,13 +81,14 @@ impl Term {
             Some(rec)
         }
     }
-    pub fn apply(&self, x: &i32) -> Ratio<i32> {
-        self.apply_ratio(&Ratio::from_integer(*x))
+    fn apply(&self, value: &i32) -> Ratio<i32> {
+        self.apply_ratio(&Ratio::from_integer(*value))
     }
-    pub fn apply_ratio(&self, x: &Ratio<i32>) -> Ratio<i32> {
+    fn apply_ratio(&self, x: &Ratio<i32>) -> Ratio<i32> {
         self.coefficient * x.pow(self.exponent as i32)
     }
 }
+    
 impl FmtAble for Term {
     fn format(&self, f: &impl FmtEr) -> String {
         let mut s = String::new();

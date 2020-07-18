@@ -1,0 +1,17 @@
+I have done:
+Polynomial
+
+I will do:
+Exponential
+Fibonacci-like
+
+I may do:
+Trig
+Absolute value
+Rational
+
+
+I will not do:
+Radical - Because it would require inputting and storing irrational numbers
+Logarithmic - Test, but I think it probably has the same problems as radical
+Conic Sections - Not valid functions because they often produce 2 outputs for one input. 

@@ -1,6 +1,5 @@
 use num::rational::Ratio;
 use crate::fmt::{FmtEr, FmtAble};
-use crate::util::all_equal;
 
 pub struct Exponential {
     stretch: Ratio<i32>,
@@ -13,27 +12,43 @@ impl Exponential {
             None
         }
         else {
-            let mut ratios = Vec::new();
-            for i in 0..values.len() - 1 {
-                ratios.push(values[i + 1] / values[i]);
+            let ratio = (values[2] - values[1]) / (values[1] - values[0]);
+            let stretch = (values[1] - values[0]) / (ratio - 1);
+            let asymptote = values[0] - stretch;
+            let new = Self {
+                stretch,
+                ratio,
+                asymptote,
+            };
+            for value in values.iter().enumerate() {
+                if value.1 != &new.apply(&(value.0 as i32)) {
+                    return None;
+                }
             }
-            if all_equal(&ratios) {
-                let asymptote = values[0] - values[1];
-                Some(Self {
-                    stretch: values[1] - values[0], // Simplify
-                    ratio: ratios[0],
-                    asymptote: values[0] - values[1],
-                })
-            }
-            else {
-                None
-            }
+            Some(new)
         }
+    }
+    fn apply(&self, value: &i32) -> Ratio<i32> {
+        self.stretch * self.ratio.pow(*value) + self.asymptote
     }
 }
 impl FmtAble for Exponential {
     fn format(&self, f: &impl FmtEr) -> String {
-        // do stuff
+        let mut s ;
+        if f.multiply("a", "(b)") == "a(b)" { 
+            s = format!("({})", self.ratio);
+        }   
+        else { 
+            s = self.ratio.to_string();
+        }
+        s = f.pow(s.as_str(), f.x().to_string().as_str());
+        if self.stretch != num::one() {
+            s = f.multiply(self.stretch.to_string().as_str(), s.as_str());
+        }
+        if self.asymptote != num::zero() {
+            s = f.add(s.as_str(), self.asymptote.to_string().as_str())
+        }
+        s
     }
 }
 
@@ -46,4 +61,6 @@ mod tests {
     fn ratios() {
         assert!(all_equal(&Exponential::from_values(&as_ratios(vec![1, 2, 4, 8, 16]))));
     }
+
+    // TODO tests
 }

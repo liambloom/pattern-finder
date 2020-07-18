@@ -103,7 +103,12 @@ pub mod formatters {
             }
         }
         fn pow(&self, a: &str, b: &str) -> String {
-            format!("{}{}", a, superscript(b.parse().unwrap()))
+            if b == self.x().to_string() {
+                format!("{}ˣ", a)
+            }
+            else {
+                format!("{}{}", a, superscript(b.parse().unwrap()))
+            }
         }
         fn x(&self) -> char {
             x

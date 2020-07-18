@@ -3,43 +3,67 @@ mod exponential;
 mod user_input;
 mod fmt;
 mod util;
+mod menu;
 
-use std::io::{stdin, stdout, Write};
+use std::io::{stdout, Write};
 use crossterm::{
-    terminal::{Clear, ClearType},
-    cursor::MoveUp,
-    execute
+    event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
+    terminal::{self, Clear, ClearType},
+    cursor::{MoveUp, Hide, Show},
+    execute,
 };
 use polynomial::Polynomial;
 use exponential::Exponential;
 use fmt::{FmtEnum, formatters};
 use indexmap::map::IndexMap;
+use menu::Menu;
 
 fn main() {
+    terminal::enable_raw_mode().unwrap();
+    execute!(
+        stdout(),
+        Hide,
+    ).unwrap();
+
+    println!("Setup:");
+    println!("Use arrow keys to move, space to select");
+
     let mut fmter_map = IndexMap::new();
 
-    fmter_map.insert(String::from("Unicode - Best looking, but may cause rendering errors"), &FmtEnum::Unicode(formatters::Unicode));
-    fmter_map.insert(String::from("ASCII - Use this to avoid rendering errors"), &FmtEnum::ASCII(formatters::ASCII));
-    fmter_map.insert(String::from("Java/JS - Equations are printed as java/javascript code"), &FmtEnum::Java_JS(formatters::Java_JS));
-    fmter_map.insert(String::from("LaTeX - This is the standard used by many online calculators"), &FmtEnum::LaTeX(formatters::LaTeX));
+    fmter_map.insert(String::from("Unicode"), &FmtEnum::Unicode(formatters::Unicode));
+    fmter_map.insert(String::from("ASCII"), &FmtEnum::ASCII(formatters::ASCII));
+    fmter_map.insert(String::from("Java/JS"), &FmtEnum::Java_JS(formatters::Java_JS));
+    fmter_map.insert(String::from("LaTeX"), &FmtEnum::LaTeX(formatters::LaTeX));
 
-    let default_fmt = menu("Please choose a display mode", &fmter_map);
+    let mut fmt_menu = Menu::new(String::from("Display mode"), fmter_map);
+
+    fmt_menu.show();
 
     loop {
-        let pattern = user_input::get_pattern();
-        match Polynomial::from_values(&pattern) {
-            Some(polynomial) => default_fmt.print(&polynomial),
-            None => println!("No pattern found"),
+        match read().unwrap() {
+            Event::Key(KeyEvent {
+                code: KeyCode::Right,
+                modifiers: KeyModifiers::NONE
+            }) => fmt_menu.increment(),
+            Event::Key(KeyEvent {
+                code: KeyCode::Left,
+                modifiers: KeyModifiers::NONE
+            }) => fmt_menu.decrement(),
+            Event::Key(KeyEvent {
+                code: KeyCode::Char(' '),
+                modifiers: KeyModifiers::NONE
+            }) => break,
+            Event::Key(KeyEvent {
+                code: KeyCode::Char('c'),
+                modifiers: KeyModifiers::CONTROL,
+            }) => {
+                execute!(stdout(), Show);
+                std::process::exit(1)
+            },
+            _ => (),
         }
     }
-}
 
-fn menu<'a, T>(prompt: &str, options: &IndexMap<String, &'a T>) -> &'a T {
-    println!("{}:", prompt);
-    let lines = options.len() as u16 + 1;
-    let mut values = Vec::new();
-    let mut err = 0;
-    for option in options.into_iter().enumerate() {
     fmt_menu.hide();
     let default_fmt = fmt_menu.value();
 
@@ -50,30 +74,15 @@ fn menu<'a, T>(prompt: &str, options: &IndexMap<String, &'a T>) -> &'a T {
         Clear(ClearType::FromCursorDown),
         Show,
     ).unwrap();
+    
     loop {
-        let mut res = String::new();
-        stdin()
-            .read_line(&mut res)
-            .expect("Could not read user input");
-        res = String::from(res.trim());
-        if let Ok(i) = res.parse::<usize>() {
-            if i != 0 {
-                if let Some(e) = values.get(i - 1) {
-                    execute!(
-                        stdout(),
-                        MoveUp(lines + 1 + err),
-                        Clear(ClearType::FromCursorDown),
-                    ).unwrap();
-                    return e;
-                }
-            }
+        let pattern = user_input::get_pattern();
+        match Polynomial::from_values(&pattern) {
+            Some(polynomial) => default_fmt.print(&polynomial),
+            None => match Exponential::from_values(&pattern) {
+                Some(exponential) => default_fmt.print(&exponential),
+                None => println!("No pattern found"),
+            },
         }
-        execute!(
-            stdout(),
-            MoveUp(1 + err),
-            Clear(ClearType::FromCursorDown),
-        ).unwrap();
-        println!("{} is not an available option", res);
-        err = 1;
     }
 }

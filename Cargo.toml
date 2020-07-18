@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 num = "0.3"
 regex = "1"
-crossterm = "0.16.0"
+crossterm = "0.17.7"
 indexmap = "1.3.2"

@@ -142,12 +142,12 @@ pub enum FmtEnum {
 }
 
 impl FmtEnum {
-    pub fn print(&self, p: &impl FmtAble) {
-        println!("{}", match self {
+    pub fn format(&self, p: &impl FmtAble) -> String {
+        match self {
             FmtEnum::Unicode(e) => p.format(e),
             FmtEnum::ASCII(e) => p.format(e),
             FmtEnum::Java_JS(e) => p.format(e),
             FmtEnum::LaTeX(e) => p.format(e),
-        });
+        }
     }
 }

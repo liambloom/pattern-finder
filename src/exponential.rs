@@ -35,7 +35,7 @@ impl Exponential {
 impl FmtAble for Exponential {
     fn format(&self, f: &impl FmtEr) -> String {
         let mut s ;
-        if f.multiply("a", "(b)") == "a(b)" { 
+        if f.multiply("a", "(b)") == "a(b)" || self.ratio.denom() != &1 { 
             s = format!("({})", self.ratio);
         }   
         else { 
@@ -54,13 +54,44 @@ impl FmtAble for Exponential {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Exponential;
     use crate::util::*;
+    use crate::fmt::{formatters, FmtAble};
+    use num::rational::Ratio;
+    const ASCII: formatters::ASCII = formatters::ASCII;
 
     #[test]
-    fn ratios() {
-        assert!(all_equal(&Exponential::from_values(&as_ratios(vec![1, 2, 4, 8, 16]))));
+    fn parent_base2() {
+        assert_eq!(Exponential::from_values(&as_ratios(vec![1, 2, 4])).unwrap().format(&ASCII), "2^x");
     }
 
-    // TODO tests
+    #[test]
+    fn parent_base3() {
+        assert_eq!(Exponential::from_values(&as_ratios(vec![1, 3, 9])).unwrap().format(&ASCII), "3^x");
+    }
+
+    #[test]
+    fn decay() {
+        assert_eq!(Exponential::from_values(&vec![num::one(), Ratio::new(1, 2), Ratio::new(1, 4)]).unwrap().format(&ASCII), "(1/2)^x");
+    }
+
+    #[test]
+    fn translate() {
+        assert_eq!(Exponential::from_values(&as_ratios(vec![2, 3, 5])).unwrap().format(&ASCII), "2^x+1");
+    }
+
+    #[test]
+    fn stretch() {
+        assert_eq!(Exponential::from_values(&as_ratios(vec![2, 4, 8])).unwrap().format(&ASCII), "2*2^x");
+    }
+
+    #[test]
+    fn all() {
+        assert_eq!(Exponential::from_values(&as_ratios(vec![5, 9, 17])).unwrap().format(&ASCII), "4*2^x+1");
+    }
+
+    #[test]
+    fn unicode() {
+        assert_eq!(Exponential::from_values(&as_ratios(vec![2, 4, 8])).unwrap().format(&formatters::Unicode), "2(2)ˣ");
+    }
 }

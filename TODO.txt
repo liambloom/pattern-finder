@@ -1,8 +1,8 @@
 I have done:
 Polynomial
+Exponential
 
 I will do:
-Exponential
 Fibonacci-like
 
 I may do:

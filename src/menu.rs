@@ -1,4 +1,3 @@
-//use crate::fmt::{formatters, FmtEnum};
 use std::io::{stdout, Write};
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent, KeyModifiers},
@@ -9,7 +8,7 @@ use crossterm::{
 };
 use indexmap::map::IndexMap;
 
-pub struct Menu<T> { // TODO allow for multiple menus simultaneously (maybe represent cursor with underline?)
+pub struct Menu<T> {
     pub items: IndexMap<String, T>,
     pub i: usize,
     pub line: u16,

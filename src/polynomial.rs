@@ -116,7 +116,7 @@ impl FmtAble for Term {
 
 #[cfg(test)]
 mod tests {
-    use super::{Polynomial};
+    use super::Polynomial;
     use crate::fmt::{formatters, FmtAble};
     use num::rational::Ratio;
     use crate::util::as_ratios;

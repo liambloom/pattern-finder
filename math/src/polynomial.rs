@@ -1,5 +1,5 @@
 use num::rational::Ratio;
-use crate::fmt::{FmtEr, FmtAble};
+use config::fmt::{FmtEr, FmtAble};
 use crate::util::all_equal;
 
 #[derive(Debug)]
@@ -117,7 +117,7 @@ impl FmtAble for Term {
 #[cfg(test)]
 mod tests {
     use super::Polynomial;
-    use crate::fmt::{formatters, FmtAble};
+    use config::fmt::{formatters, FmtAble};
     use num::rational::Ratio;
     use crate::util::as_ratios;
     const ASCII: formatters::ASCII = formatters::ASCII;

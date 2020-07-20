@@ -34,6 +34,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
+name = "cli"
+version = "0.1.0"
+dependencies = [
+ "config",
+ "crossterm",
+ "indexmap",
+ "math",
+ "num",
+ "util",
+]
+
+[[package]]
 name = "cloudabi"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -41,6 +53,10 @@ checksum = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 dependencies = [
  "bitflags",
 ]
+
+[[package]]
+name = "config"
+version = "0.1.0"
 
 [[package]]
 name = "crossterm"
@@ -68,6 +84,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "gui"
+version = "0.1.0"
+
+[[package]]
 name = "indexmap"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -84,9 +104,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.72"
+version = "0.2.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9f8082297d534141b30c8d39e9b1773713ab50fdbe4ff30f750d063b3bfd701"
+checksum = "bd7d4bd64732af4bf3a67f367c27df8520ad7e230c5817b8ff485864d80242b9"
 
 [[package]]
 name = "lock_api"
@@ -104,6 +124,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fabed175da42fed1fa0746b0ea71f412aa9d35e76e95e59b192c64b9dc2bf8b"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "math"
+version = "0.1.0"
+dependencies = [
+ "config",
+ "num",
+ "util",
 ]
 
 [[package]]
@@ -249,10 +278,13 @@ dependencies = [
 name = "pattern-finder"
 version = "0.1.0"
 dependencies = [
+ "config",
  "crossterm",
  "indexmap",
+ "math",
  "num",
  "regex",
+ "util",
 ]
 
 [[package]]
@@ -331,6 +363,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d40c6d1b69745a6ec6fb1ca717914848da4b44ae29d9b3080cbee91d72a69b14"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "util"
+version = "0.1.0"
+dependencies = [
+ "num",
+ "regex",
 ]
 
 [[package]]

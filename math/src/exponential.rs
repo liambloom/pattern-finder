@@ -1,5 +1,5 @@
 use num::rational::Ratio;
-use crate::fmt::{FmtEr, FmtAble};
+use config::fmt::{FmtEr, FmtAble};
 
 pub struct Exponential {
     stretch: Ratio<i32>,
@@ -55,8 +55,8 @@ impl FmtAble for Exponential {
 #[cfg(test)]
 mod tests {
     use super::Exponential;
-    use crate::util::*;
-    use crate::fmt::{formatters, FmtAble};
+    use crate::util::as_ratios;
+    use config::fmt::{formatters, FmtAble};
     use num::rational::Ratio;
     const ASCII: formatters::ASCII = formatters::ASCII;
 

@@ -1,29 +1,8 @@
-use std::{io::{self, Write}, convert::TryInto, num::ParseIntError};
 use num::rational::Ratio;
 use regex::Regex;
+use std::{convert::TryInto, num::ParseIntError};
 
-pub fn get_pattern() -> Vec<Ratio<i32>> {
-    let mut pattern = String::new();
-    print!("Pattern: ");
-    io::stdout().flush().expect("Unable to flush buffer");
-    io::stdin()
-        .read_line(&mut pattern)
-        .expect("Could not read user input");
-    let parsed = pattern.split(',').map(parse);
-    let mut vec: Vec<Ratio<i32>> = Vec::new();
-    for p in parsed {
-        match p {
-            Ok(ratio) => vec.push(ratio),
-            Err(err) => {
-                println!("Error: {}", err);
-                return get_pattern();
-            }
-        }
-    }
-    vec
-}
-
-fn parse(mut s: &str) -> Result<Ratio<i32>, ParseIntError> {
+pub fn parse(mut s: &str) -> Result<Ratio<i32>, ParseIntError> {
     s = s.trim();
     if Regex::new(r"^-?\d*\.?\d+$").unwrap().is_match(s) {
         Ok(match s.find('.') {
@@ -67,7 +46,6 @@ fn parse(mut s: &str) -> Result<Ratio<i32>, ParseIntError> {
         }
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;

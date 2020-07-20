@@ -11,7 +11,7 @@ pub fn all_equal(vec: &Vec<impl PartialEq>) -> bool {
     true
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 pub fn as_ratios(vec: Vec<i32>) -> Vec<Ratio<i32>> { // Not a test, just used by tests
     let mut new = Vec::new();
     for int in vec.iter() {
@@ -21,16 +21,16 @@ pub fn as_ratios(vec: Vec<i32>) -> Vec<Ratio<i32>> { // Not a test, just used by
 }
 
 #[cfg(test)]
-mod all_equal {
-    use super::all_equal as vec_equality_checker;
+mod test {
+        use super::all_equal as vec_equality_checker;
 
-    #[test]
-    fn all_equal() {
-        assert!(vec_equality_checker(&vec![1, 1, 1]));
-    }
+        #[test]
+        fn all_equal() {
+            assert!(vec_equality_checker(&vec![1, 1, 1]));
+        }
 
-    #[test]
-    fn not_all_equal() {
-        assert!(!vec_equality_checker(&vec![1, 2, 3]));
+        #[test]
+        fn not_all_equal() {
+            assert!(!vec_equality_checker(&vec![1, 2, 3]));
+        }
     }
-}

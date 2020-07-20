@@ -1,23 +1,17 @@
-mod polynomial;
-mod exponential;
-mod user_input;
-mod fmt;
-mod util;
 mod menu;
-mod output;
 
-use std::io::{stdout, Write};
+use std::io::{stdin, stdout, Write};
 use crossterm::{
     terminal::{Clear, ClearType},
     cursor::MoveUp,
     execute,
 };
-use polynomial::Polynomial;
-use exponential::Exponential;
-use fmt::{FmtEnum, formatters};
+use math::{polynomial::Polynomial, exponential::Exponential};
+use config::{fmt::{FmtEnum, formatters}, output::Output};
 use indexmap::map::IndexMap;
 use menu::Menu;
-use output::Output;
+use util::parse;
+use num::rational::Ratio;
 
 fn main() {
     println!("Setup:");
@@ -56,7 +50,7 @@ fn main() {
     ).unwrap();
     
     loop {
-        let pattern = user_input::get_pattern();
+        let pattern = get_pattern();
         match Polynomial::from_values(&pattern) {
             Some(polynomial) => default_output.print(&default_fmt.format(&polynomial)),
             None => match Exponential::from_values(&pattern) {
@@ -65,4 +59,25 @@ fn main() {
             },
         }
     }
+}
+
+pub fn get_pattern() -> Vec<Ratio<i32>> {
+    let mut pattern = String::new();
+    print!("Pattern: ");
+    stdout().flush().expect("Unable to flush buffer");
+    stdin()
+        .read_line(&mut pattern)
+        .expect("Could not read user input");
+    let parsed = pattern.split(',').map(parse);
+    let mut vec: Vec<Ratio<i32>> = Vec::new();
+    for p in parsed {
+        match p {
+            Ok(ratio) => vec.push(ratio),
+            Err(err) => {
+                println!("Error: {}", err);
+                return get_pattern();
+            }
+        }
+    }
+    vec
 }

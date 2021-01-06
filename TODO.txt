@@ -3,7 +3,7 @@ Polynomial
 Exponential
 
 I will do:
-Fibonacci-like
+Fibonacci-like (Finish precalc first)
 
 I may do:
 Trig

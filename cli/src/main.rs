@@ -51,7 +51,7 @@ fn main() {
     
     loop {
         let pattern = get_pattern();
-        match Polynomial::from_values(&pattern) {
+        match Polynomial::from_values(&pattern, 0) {
             Some(polynomial) => default_output.print(&default_fmt.format(&polynomial)),
             None => match Exponential::from_values(&pattern) {
                 Some(exponential) => default_output.print(&default_fmt.format(&exponential)),

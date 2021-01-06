@@ -10,3 +10,8 @@ edition = "2018"
 util = { path = "../util" }
 config = { path = "../config" }
 num = "0.3"
+nalgebra = "0.24"
+paste = "1.0"
+regex = "1"
+approx = "^0.4"
+simba = "^0.3"

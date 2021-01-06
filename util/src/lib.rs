@@ -26,8 +26,8 @@ pub fn parse(mut s: &str) -> Result<Ratio<i32>, ParseIntError> {
             None => Ratio::from_integer(s.parse()?),
         })
     }
-    else if Regex::new(format!(r"^-?(?:\d+\s+)?\d\s*/\s*-?\d$").as_str()).unwrap().is_match(s) {
-        let number_regex =  Regex::new(r"-?\d").unwrap();
+    else if Regex::new(format!(r"^-?(?:\d+\s+)?\d+\s*/\s*-?\d+$").as_str()).unwrap().is_match(s) {
+        let number_regex =  Regex::new(r"-?\d+").unwrap();
         let mut matches: Vec<_> = number_regex.find_iter(s).collect();
         let whole;
         if matches.len() == 3 {
@@ -46,6 +46,7 @@ pub fn parse(mut s: &str) -> Result<Ratio<i32>, ParseIntError> {
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -63,6 +64,16 @@ mod tests {
     #[test]
     fn fraction() {
         assert_eq!(parse("1 / 2").unwrap(), Ratio::new(1, 2));
+    }
+
+    #[test]
+    fn multi_digit_fraction_denom() {
+        assert_eq!(parse("1 / 16").unwrap(), Ratio::new(1, 16));
+    }
+
+    #[test]
+    fn multi_digit_fraction_numer() {
+        assert_eq!(parse("16 / 3").unwrap(), Ratio::new(16, 3))
     }
 
     #[test]

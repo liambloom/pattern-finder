@@ -8,7 +8,7 @@ pub struct Exponential {
 }
 impl Exponential {
     pub fn from_values(values: &Vec<Ratio<i32>>) -> Option<Self> {
-        if values.len() < 3 {
+        if values.len() < 3 || values[0] == values[1] {
             None
         }
         else {
@@ -34,8 +34,8 @@ impl Exponential {
 }
 impl FmtAble for Exponential {
     fn format(&self, f: &impl FmtEr) -> String {
-        let mut s ;
-        if f.multiply("a", "(b)") == "a(b)" || self.ratio.denom() != &1 { 
+        let mut s;
+        if self.stretch != num::one() && f.multiply("a", "(b)") == "a(b)" || self.ratio.denom() != &1 { 
             s = format!("({})", self.ratio);
         }   
         else { 

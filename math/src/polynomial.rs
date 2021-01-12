@@ -1,4 +1,4 @@
-use num::rational::Ratio;
+use num::{Zero, rational::Ratio};
 use config::fmt::{FmtAble, FmtEr};
 use crate::{real_ratio::RatioField, util::all_equal};
 use nalgebra::{DMatrix as Matrix, DVector as Vector};
@@ -18,20 +18,19 @@ impl Polynomial {
     pub fn from_points(points: &Vec<(Ratio<i32>, Ratio<i32>)>) -> Option<Self> {
         let len = points.len();
         let range = (0..len as i32).rev();
-        let mut x_matrix = Vec::with_capacity(len.pow(2));
-        let mut y_vector = Vec::with_capacity(len);
+        let mut x_matrix: Vec<RatioField> = Vec::with_capacity(len.pow(2));
+        let mut y_vector: Vec<RatioField> = Vec::with_capacity(len);
         for point in points {
             for i in range.clone() {
                 x_matrix.push(point.0.pow(i).into());
             }
             y_vector.push(point.1.into());
         }
-        let x_matrix: Matrix<RatioField> = Matrix::from_vec(len, len, x_matrix);
-        let y_vector: Vector<RatioField> = Vector::from_vec(y_vector);
         Some(Self {
-            terms: (x_matrix.try_inverse()? * y_vector)
-            .data.as_vec().iter().enumerate()
-            .map(|i| Term { coefficient: (*i.1).into(), exponent: i.0 as u8 } ).collect()
+            terms: (Matrix::from_row_slice(len, len, &x_matrix).try_inverse()? * Vector::from_vec(y_vector))
+                .data.as_vec().iter().enumerate()
+                .map(|i| Term { coefficient: (*i.1).into(), exponent: (len - 1 - i.0) as u8 } )
+                .filter(|e| e.coefficient != Ratio::zero()).collect()
         })
     }
 }

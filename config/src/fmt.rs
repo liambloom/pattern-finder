@@ -42,7 +42,7 @@ pub trait FmtEr {
     }
     fn subtract(&self, a: &str, b: &str) -> String {
         if b.starts_with('-') {
-            self.subtract(a, &b[1..b.len()])
+            self.add(a, &b[1..b.len()])
         }
         else {
             format!("{}-{}", a, b)

@@ -227,51 +227,8 @@ impl Num for RatioField {
         if radix != 10 {
             return Err(FromStrErr::UnsupportedRadix)
         }
-        let mut s = s.trim().to_owned();
-        s.make_ascii_uppercase();
-        if Regex::new(r"^-?[\dA-Z]*\.?\d+$").unwrap().is_match(&s) {
-            Ok(RatioField::new(match s.find('.') {
-                // The reason I don't just use Ratio::from_float(s.parse().unwrap()) is because of roundoff errors.
-                // For example, Ratio::from_float(0.3).unwrap() = 5,404,319,552,844,595/18,014,398,509,481,984
-                Some(mut index) => {
-                    let negative = s.starts_with('-');
-                    if negative {
-                        s.remove(0);//(&s[1..s.len()]).to_string();
-                        index -= 1;
-                    }
-                    let ratio = ( if index == 0 { num::zero() }
-                        else { Ratio::from_integer((&s[0..index]).parse()?) } )
-                    + Ratio::new(
-                        (&s[index + 1..s.len()]).parse()?, 
-                        10i32.pow((s.len() - index - 1).try_into().unwrap())
-                    );
-                    let neg = if negative { -1 } else { 1 };
-                    ratio * neg
-                },
-                None => Ratio::from_integer(s.parse()?),
-            }))
-        }
-        else if Regex::new(format!(r"^-?(?:\d+\s+)?\d+\s*/\s*-?\d+$").as_str()).unwrap().is_match(&s) {
-            let number_regex =  Regex::new(r"-?\d+").unwrap();
-            let mut matches: Vec<_> = number_regex.find_iter(&s).collect();
-            let whole;
-            if matches.len() == 3 {
-                whole = Ratio::from_integer(matches.remove(0).as_str().parse()?);
-            }
-            else {
-                whole = num::zero();
-            }
-            assert_eq!(matches.len(), 2);
-            Ok(RatioField::new(
-                whole + Ratio::new(if s.starts_with('-') { -1 } else { 1 } * num::abs(matches[0].as_str().parse::<i32>()?), 
-                matches[1].as_str().parse()?)
-            ))
-        }
         else {
-            match s.parse::<u32>() {
-                Ok(_parsed) => Err(FromStrErr::InvalidNumber),
-                Err(err) => Err(err.into()),
-            }
+            Ok(RatioField::new(util::parse(s)?))
         }
     }
 }

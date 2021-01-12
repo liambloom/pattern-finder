@@ -26,11 +26,15 @@ impl Polynomial {
             }
             y_vector.push(point.1.into());
         }
+        let mut terms: Vec<Term> = (Matrix::from_row_slice(len, len, &x_matrix).try_inverse()? * Vector::from_vec(y_vector))
+            .data.as_vec().iter().enumerate().filter(|e| *e.1 != RatioField::zero())
+            .map(|i| Term { coefficient: (*i.1).into(), exponent: (len - 1 - i.0) as u8 } )
+            .collect();
+        if terms.len() == 0 {
+            terms = vec![ Term { coefficient: Ratio::zero(), exponent: 0} ]
+        }
         Some(Self {
-            terms: (Matrix::from_row_slice(len, len, &x_matrix).try_inverse()? * Vector::from_vec(y_vector))
-                .data.as_vec().iter().enumerate()
-                .map(|i| Term { coefficient: (*i.1).into(), exponent: (len - 1 - i.0) as u8 } )
-                .filter(|e| e.coefficient != Ratio::zero()).collect()
+            terms
         })
     }
 }

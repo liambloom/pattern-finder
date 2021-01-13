@@ -1,2 +1,11 @@
 /target
 /.vscode
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.pdf
+*.synctex.gz
+*.out
+*.toc
+*.cpt

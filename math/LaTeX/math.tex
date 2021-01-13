@@ -1,0 +1,137 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{amsmath}
+%\usepackage[utf8]{inputenc} this enables utf-8, and is currently commented out
+\usepackage{cprotect}
+\usepackage{hyperref}
+
+\title{How this math works}
+\author{Liam Bloom}
+\date{\today}
+
+\begin{document}
+
+\tableofcontents
+
+\section*{Introduction}
+
+This library takes, as input, a series of $n$ points 
+\((x_0, y_0), (x_1, y_1)\cdots \\(x_{n-2}, y_{n-2}), 
+(x_{n-1}, y_{n-1})\), and returns {\textit a} \verb|Function| that 
+produces these points. Note that this will not be the only such
+\verb|Function|, only the one that my code feels makes the most sense. 
+Here are, in order, the types of functions that may be returned, and
+how they are calculated.
+
+\section{Polynomial}
+
+{\textbf Form:} \(f(x)=ax^{n-1}+bx^{n-2}\cdots cx^1+d\) \vspace{2ex}
+
+A polynomial of the $n$-th degree, the standard form of which is shown
+above, can be generated from a series of $\geq n$ points using linear
+algebra. We begin by creating a system of equations:
+
+\[y_0=ax_0^{n-1}+bx_0^{n-2}\cdots cx_0^1+d\]
+\[y_1=ax_1^{n-1}+bx_1^{n-2}\cdots cx_1^1+d\]
+\[\vdots\]
+\[y_{n-2}=ax_{n-2}^{n-1}+bx_{n-2}^{n-2}\cdots cx_{n-2}^1+d\]
+\[y_{n-1}=ax_{n-1}^{n-1}+bx_{n-1}^{n-2}\cdots cx_{n-1}^1+d\]
+
+This can be rewritten as a linear algebra equation:
+
+\[
+    \begin{bmatrix} 
+    x_0^{n-1} & x_0^{n-2} & \cdots & x_0^1 & 1 \\
+    x_1^{n-1} & x_1^{n-2} & \cdots & x_1^1 & 1 \\
+    \vdots & \vdots & \ddots & \vdots & \vdots \\
+    x_{n-2}^{n-1} & x_{n-2}^{n-2} & \cdots & x_{n-2}^1 & 1 \\
+    x_{n-1}^{n-1} & x_{n-1}^{n-2} & \cdots & x_{n-1}^1 & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+    a \\
+    b \\
+    \vdots \\
+    c \\
+    d
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    y_0 \\
+    y_1 \\
+    \vdots \\
+    y_{n-2} \\
+    y_{n-1}
+    \end{bmatrix}
+\]
+
+and solved by multiplying both sides by the inverse:
+
+\[
+    \begin{bmatrix}
+    a \\
+    b \\
+    \vdots \\
+    c \\
+    d
+    \end{bmatrix}
+    =
+    \begin{bmatrix} 
+    x_0^{n-1} & x_0^{n-2} & \cdots & x_0^1 & 1 \\
+    x_1^{n-1} & x_1^{n-2} & \cdots & x_1^1 & 1 \\
+    \vdots & \vdots & \ddots & \vdots & \vdots \\
+    x_{n-2}^{n-1} & x_{n-2}^{n-2} & \cdots & x_{n-2}^1 & 1 \\
+    x_{n-1}^{n-1} & x_{n-1}^{n-2} & \cdots & x_{n-1}^1 & 1
+    \end{bmatrix}^{-1}
+    \begin{bmatrix}
+    y_0 \\
+    y_1 \\
+    \vdots \\
+    y_{n-2} \\
+    y_{n-1}
+    \end{bmatrix}
+\]
+
+We then plug \(a, b \cdots c, d\) into the standard form to generate 
+our function.
+
+\subsection{Old Polynomial Method}
+
+The above linear algebra method was not used for determining polynomial
+functions prior to commit \cprotect{\href{
+https://github.com/liambloom/pattern-finder/commit/1f190e5aca4f2f4dda9d342b1e721a6458b44415
+}}{\verb|1f190e5|}. Instead, the following method was used:
+
+\section{Exponential}
+{\textbf Form:} \(f(x)=ab^x+c\) \vspace{2ex}
+
+An exponential equation, as shown above, can be generated from 
+$\geq 3$ points
+
+% TODO
+
+\section{The Future}
+
+This section lists what types of functions may or may not be added
+to this library in the future, and if not, why.
+
+\subsection{Likely to be added}
+\begin{itemize}
+    \item Rational
+    \item Fibonacci-like
+\end{itemize}
+
+
+\subsection{May be added}
+\begin{itemize}
+    \item Trig
+    \item Absolute Value
+\end{itemize}
+
+\subsection{Unlikely to be added}
+\begin{itemize}
+    \item Radical functions would most likely require storage of 
+        irrational numbers, which is impossible
+    \item Logarithmic functions for the same reason as radicals
+    \item Conic Sections because they cannot be represented as functions
+\end{itemize}
+
+\end{document}

@@ -3,12 +3,12 @@ use std::{
     ops::{Add, Sub, Mul, Div, Rem, Neg, AddAssign, SubAssign, MulAssign, DivAssign, RemAssign}, 
     convert::{From, TryInto, Into}, 
 };
-use num::{Bounded, Num, One, Signed, Zero, pow::Pow, rational::Ratio, FromPrimitive};
+use config::output::Output;
+use num::{Bounded, FromPrimitive, Integer, Num, NumCast, One, Signed, Zero, pow::Pow, rational::Ratio, traits::NumAssign};
 use nalgebra::{ComplexField, Field, RealField};
 use approx::{UlpsEq, RelativeEq, AbsDiffEq};
 use simba::{simd::SimdValue, scalar::{SubsetOf, SupersetOf}};
 use paste::paste;
-use regex::Regex;
 
 // Some of the trait implementations in this code are derived from the
 // source code of the cates simba and approx
@@ -22,10 +22,10 @@ macro_rules! inherit {
         )*
         $(inherit!($($next)*);)?
     };
-    (static use i32 $($name:ident($($arg_name:ident: $arg_ty:ty),*)),* $(; $($next:tt)*)?) => {
+    (static use T $($name:ident($($arg_name:ident: $arg_ty:ty),*)),* $(; $($next:tt)*)?) => {
         $(
             fn $name($($arg_name: $arg_ty),*) -> Self {
-                RatioField::new(Ratio::from_integer(i32::$name($($arg_name),*)))
+                RatioField::new(Ratio::from_integer(T::$name($($arg_name),*)))
             }
         )*
         $(inherit!($($next)*);)?
@@ -73,10 +73,10 @@ macro_rules! inherit {
 }
 
 macro_rules! impl_op {
-    (impl ($($trait:ident)*) for $struct:ty) => {
+    ($($trait:ident)*) => {
         $(
-            impl $trait<$struct> for $struct {
-                type Output = $struct;
+            impl<T: Clone + Integer> $trait<RatioField<T>> for RatioField<T> {
+                type Output = Self;
 
                 paste! {
                     inherit! {
@@ -85,18 +85,18 @@ macro_rules! impl_op {
                 }
             }
             paste! {
-                impl [<$trait Assign>] for $struct {
+                impl<T: Clone + Integer + NumAssign> [<$trait Assign>] for RatioField<T> {
                     fn [<$trait:snake _assign>](&mut self, o: Self) {
                         self.ratio.[<$trait:snake _assign>](o.ratio)
                     }
                 }
             }
 
-            impl<'a> $trait for &'a $struct {
-                type Output = $struct;
+            impl<'a, T: Clone + Integer + Copy> $trait for &'a RatioField<T> {
+                type Output = RatioField<T>;
 
                 paste! {
-                    fn [<$trait:snake>](self, o: Self) -> $struct {
+                    fn [<$trait:snake>](self, o: Self) -> Self::Output {
                         RatioField::new(self.ratio.[<$trait:lower>](o.ratio))
                     }
                 }
@@ -108,7 +108,7 @@ macro_rules! impl_op {
 macro_rules! impl_op_unary {
     ($($trait:ident)*) => {
         $(
-            impl $trait for RatioField {
+            impl<T: Clone + Integer> $trait for RatioField<T> {
                 //type Output = RatioField;
 
                 paste! {
@@ -123,50 +123,74 @@ macro_rules! impl_op_unary {
 }
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq, Ord, Eq)]
-pub struct RatioField {
-    pub ratio: Ratio<i32>
+pub struct RatioField<T: Integer + Clone> {
+    pub ratio: Ratio<T>
 }
 
-impl RatioField {
-    const EPSILON: Self = Self::new(Ratio::new_raw(1, i32::MAX));
-
-    pub const fn new(ratio: Ratio<i32>) -> Self {
+impl<T: Clone + Integer> RatioField<T> {
+    pub fn new(ratio: Ratio<T>) -> Self {
         RatioField { ratio }
     }
 }
 
-impl From<Ratio<i32>> for RatioField {
-    fn from(ratio: Ratio<i32>) -> Self {
+impl<T: Clone + Integer> From<Ratio<T>> for RatioField<T> {
+    fn from(ratio: Ratio<T>) -> Self {
         Self { ratio }
     }
 }
 
-impl Into<Ratio<i32>> for RatioField {
-    fn into(self) -> Ratio<i32> {
+impl<T: Clone + Integer> Into<Ratio<T>> for RatioField<T> {
+    fn into(self) -> Ratio<T> {
         self.ratio
     }
 }
 
-impl_op!(impl (Add Sub Mul Div Rem) for RatioField);
+impl_op!(Add Sub Mul Div Rem);
 impl_op_unary!(One Zero);
 
 // Neg is unary, unlike the rest
-impl Neg for RatioField {
-    type Output = RatioField;
+impl<T: Clone + Integer + Neg<Output = T>> Neg for RatioField<T> {
+    type Output = Self;
 
     inherit! {
         neg()
     }
 }
 
-impl Into<f64> for RatioField {
+impl<T: Integer + Clone> Into<f64> for RatioField<T> {
     fn into(self) -> f64 {
-        let parts: (i32, i32) = self.ratio.into();
-        parts.0 as f64 / parts.1 as f64
+        let parts: (T, T) = self.ratio.into();
+        to_f64(parts.0) / to_f64(parts.1)
     }
 }
 
-impl RealField for RatioField {
+fn to_f64<T: Integer + Clone>(mut n: T) -> f64 {
+    let mut digit = T::one();
+    let mut digit_f = 1.0;
+    let two = T::one() + T::one();
+    while digit <= n {
+        digit = digit * two.clone();
+        digit_f *= 2.0;
+    }
+    digit = digit / two.clone();
+    digit_f /= 2.0;
+    let mut float = 0.0;
+    while n > T::zero() {
+        if n.is_multiple_of(&digit) {
+            n = n - digit.clone();
+            float += digit_f;
+            debug_assert!(n < digit.clone());
+        }
+        digit = digit / two.clone();
+        digit_f /= 2.0;
+    }
+    float
+}
+
+impl<T> RealField for RatioField<T>
+    where T: Integer + Clone + Signed + Bounded + fmt::Debug + Copy + Sync + 
+        NumAssign + Send + NumCast + fmt::Display + Pow<u32, Output = T> + 'static + FromPrimitive
+{
     fn is_sign_positive(self) -> bool {
         self.is_positive()
     }
@@ -207,20 +231,20 @@ impl RealField for RatioField {
     }
 }
 
-impl Bounded for RatioField {
+impl<T: Integer + Clone + Bounded> Bounded for RatioField<T> {
     inherit! {
-        static use i32 min_value(), max_value()
+        static use T min_value(), max_value()
     }
 }
 
-impl Signed for RatioField {
+impl<T: Integer + Clone + Signed> Signed for RatioField<T> {
     inherit! {
         abs(), abs_sub(other: &Self), signum();
         is_positive(), is_negative() -> bool;
     }
 }
 
-impl Num for RatioField {
+impl<T: Integer + Clone> Num for RatioField<T> {
     type FromStrRadixErr = FromStrErr;
 
     fn from_str_radix(s: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> {
@@ -228,15 +252,19 @@ impl Num for RatioField {
             return Err(FromStrErr::UnsupportedRadix)
         }
         else {
-            Ok(RatioField::new(util::parse(s)?))
+            //Ok(RatioField::new(util::parse(s)?))
+            todo!()
         }
     }
 }
 
-impl ComplexField for RatioField {
-    type RealField = RatioField;
+impl<T> ComplexField for RatioField<T>
+    where T: Integer + Clone + Signed + Bounded + fmt::Debug + Copy + Sync + NumAssign + 
+        Send + NumCast + fmt::Display + 'static + Pow<u32, Output = T> + FromPrimitive
+{
+    type RealField = Self;
 
-    fn from_real(re: RatioField) -> Self {
+    fn from_real(re: Self) -> Self {
         re
     }
 
@@ -285,6 +313,9 @@ impl ComplexField for RatioField {
     }
 
     fn powi(self, n: i32) -> Self {
+        let parts: (T, T) = self.ratio.into();
+        //RatioField::new(Ratio::new(parts.0.pow(n), parts.1.pow(n)))
+        //todo!()
         Self::new(self.ratio.pow(n))
     }
 
@@ -307,11 +338,11 @@ impl ComplexField for RatioField {
     }
 }
 
-impl Field for RatioField { }
+impl<T: Integer + Clone + Signed + NumAssign> Field for RatioField<T> { }
 
-impl RelativeEq for RatioField {
+impl<T: Integer + Clone + Signed + Bounded> RelativeEq for RatioField<T> {
     fn default_max_relative() -> Self {
-        Self::EPSILON
+        Self::default_epsilon()
     }
 
     fn relative_eq(&self, other: &Self, epsilon: Self, max_relative: Self) -> bool {
@@ -319,7 +350,7 @@ impl RelativeEq for RatioField {
             return true;
         }
 
-        let abs_diff = (self - other).abs();
+        let abs_diff = (self.clone() - other.clone()).abs();
 
         // For when the numbers are really close together
         if abs_diff <= epsilon {
@@ -340,7 +371,7 @@ impl RelativeEq for RatioField {
     }
 }
 
-impl UlpsEq for RatioField {
+impl<T: Integer + Clone + Signed + Bounded> UlpsEq for RatioField<T> {
     fn default_max_ulps() -> u32 {
         4
     }
@@ -354,15 +385,15 @@ impl UlpsEq for RatioField {
             return false;
         }
 
-        let int_self: i64 = unsafe { mem::transmute(Into::<f64>::into(*self)) };
-        let int_other: i64 = unsafe { mem::transmute(Into::<f64>::into(*other)) };
+        let int_self: i64 = unsafe { mem::transmute(Into::<f64>::into(self.clone())) };
+        let int_other: i64 = unsafe { mem::transmute(Into::<f64>::into(other.clone())) };
 
         (int_self - int_other).abs() < max_ulps as i64
     }
 }
 
-impl SimdValue for RatioField {
-    type Element = RatioField;
+impl<T: Integer + Clone> SimdValue for RatioField<T> {
+    type Element = Self;
     type SimdBool = bool;
 
     fn lanes() -> usize {
@@ -374,11 +405,11 @@ impl SimdValue for RatioField {
     }
 
     fn extract(&self, _: usize) -> Self::Element {
-        *self
+        self.to_owned()
     }
 
     unsafe fn extract_unchecked(&self, _: usize) -> Self::Element {
-        *self
+        self.to_owned()
     }
 
     fn replace(&mut self, _: usize, val: Self::Element) {
@@ -398,37 +429,33 @@ impl SimdValue for RatioField {
     }
 }
 
-impl AbsDiffEq for RatioField {
+impl<T> AbsDiffEq for RatioField<T>
+    where T: Clone + Integer + Bounded + Signed
+{
     type Epsilon = Self;
 
-    fn default_epsilon() -> Self {
-        Self::EPSILON
+    fn default_epsilon() -> Self::Epsilon {
+        Self::new(Ratio::new(T::one(), T::max_value()))
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self) -> bool {
-        (self - other).abs() <= epsilon
+        (self.clone() - other.clone()).abs() <= epsilon
     }
 }
 
-impl fmt::Display for RatioField {
+impl<T: Integer + Clone + fmt::Display> fmt::Display for RatioField<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.ratio)
     }
 }
 
-impl FromPrimitive for RatioField {
+impl<T: Integer + Clone + FromPrimitive + Bounded + NumCast + Signed> FromPrimitive for RatioField<T> {
     fn from_i64(n: i64) -> Option<Self> {
-        match n.try_into() {
-            Ok(n) => Some(Self::new(Ratio::from_integer(n))),
-            Err(_) => None,
-        }
+        Some(Self::new(Ratio::from_integer(T::from_i64(n)?)))
     }
 
     fn from_u64(n: u64) -> Option<Self> {
-        match n.try_into() {
-            Ok(n) => Some(Self::new(Ratio::from_integer(n))),
-            Err(_) => None,
-        }
+        Some(Self::new(Ratio::from_integer(T::from_u64(n)?)))
     }
     
     fn from_f64(n: f64) -> Option<Self> {
@@ -436,13 +463,13 @@ impl FromPrimitive for RatioField {
     }
 }
 
-impl SubsetOf<Self> for RatioField {
+impl<T: Integer + Clone> SubsetOf<Self> for RatioField<T> {
     fn to_superset(&self) -> Self {
-        *self
+        self.to_owned()
     }
 
     fn from_superset_unchecked(element: &Self) -> Self {
-        *element
+        element.to_owned()
     }
 
     fn is_in_subset(_: &Self) -> bool {
@@ -454,13 +481,13 @@ impl SubsetOf<Self> for RatioField {
 // numbers, while Ratio represents rational numbers.
 // ℝ ⊅ ℚ, but I have to pretend it does for this to
 // work, so whatever
-impl SupersetOf<f64> for RatioField {
+impl<T: Integer + Clone + Bounded + NumCast + Signed> SupersetOf<f64> for RatioField<T> {
     fn is_in_subset(&self) -> bool {
         true
     }
 
     fn to_subset_unchecked(&self) -> f64 {
-        (*self).into()
+        self.to_owned().into()
     }
 
     fn from_subset(element: &f64) -> Self {

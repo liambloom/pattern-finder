@@ -1,6 +1,6 @@
 use num::{Zero, rational::Ratio};
 use config::fmt::{FmtAble, FmtEr};
-use crate::{real_ratio::RatioField, util::all_equal};
+use crate::ratio_field::RatioField;
 use nalgebra::{DMatrix as Matrix, DVector as Vector};
 
 #[derive(Debug)]
@@ -18,8 +18,8 @@ impl Polynomial {
     pub fn from_points(points: &Vec<(Ratio<i32>, Ratio<i32>)>) -> Option<Self> {
         let len = points.len();
         let range = (0..len as i32).rev();
-        let mut x_matrix: Vec<RatioField> = Vec::with_capacity(len.pow(2));
-        let mut y_vector: Vec<RatioField> = Vec::with_capacity(len);
+        let mut x_matrix: Vec<RatioField<i32>> = Vec::with_capacity(len.pow(2));
+        let mut y_vector: Vec<RatioField<i32>> = Vec::with_capacity(len);
         for point in points {
             for i in range.clone() {
                 x_matrix.push(point.0.pow(i).into());

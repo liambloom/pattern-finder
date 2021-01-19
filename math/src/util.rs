@@ -1,5 +1,6 @@
 #[cfg(test)]
 use num::rational::Ratio;
+use alloc::vec::Vec;
 
 pub fn all_equal(vec: &Vec<impl PartialEq>) -> bool {
     let prev = &vec[0];

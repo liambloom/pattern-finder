@@ -1,4 +1,4 @@
-use std::{
+use core::{
     mem, fmt, num::ParseIntError, 
     ops::{Add, Sub, Mul, Div, Rem, Neg, AddAssign, SubAssign, MulAssign, DivAssign, RemAssign}, 
     convert::{From, TryInto, Into}, 
@@ -9,6 +9,7 @@ use nalgebra::{ComplexField, Field, RealField};
 use approx::{UlpsEq, RelativeEq, AbsDiffEq};
 use simba::{simd::SimdValue, scalar::{SubsetOf, SupersetOf}};
 use paste::paste;
+use alloc::borrow::ToOwned;
 
 // Some of the trait implementations in this code are derived from the
 // source code of the cates simba and approx

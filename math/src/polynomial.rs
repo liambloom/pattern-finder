@@ -2,6 +2,7 @@ use num::{Zero, rational::Ratio};
 use config::fmt::{FmtAble, FmtEr};
 use crate::ratio_field::RatioField;
 use nalgebra::{DMatrix as Matrix, DVector as Vector};
+use alloc::{vec::Vec, string::{String, ToString}};
 
 #[derive(Debug)]
 pub struct Polynomial {

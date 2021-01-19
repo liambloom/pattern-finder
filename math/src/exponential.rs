@@ -1,5 +1,6 @@
 use num::rational::Ratio;
 use config::fmt::{FmtEr, FmtAble};
+use alloc::{vec::Vec, string::{String, ToString}, format};
 
 pub struct Exponential {
     stretch: Ratio<i32>,
@@ -62,7 +63,7 @@ mod tests {
 
     #[test]
     fn parent_base2() {
-        assert_eq!(Exponential::from_values(&as_ratios(vec![1, 2, 4])).unwrap().format(&ASCII), "2^x");
+        assert_eq!(Exponential::from_values(&as_ratios(alloc::vec![1, 2, 4])).unwrap().format(&ASCII), "2^x");
     }
 
     #[test]

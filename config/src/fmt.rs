@@ -129,7 +129,28 @@ pub mod formatters {
 
     #[derive(Debug)]
     pub struct LaTeX;
-    impl FmtEr for LaTeX {} // Wow, this is all defaults
+    impl FmtEr for LaTeX {
+        fn multiply(&self, a: &str, b: &str) -> String {
+            if a.ends_with(self.x()) || b.starts_with(self.x()) || a.ends_with(')') && b.starts_with('(') {
+                format!("{}{}", a, b)
+            }
+            else {
+                format!(r"{}\cdot{}", a, b)
+            }
+        }
+        fn divide(&self, a: &str, b: &str) -> String {
+            if a == "0" {
+                a.to_owned()
+            }
+            else {
+                match b {
+                    "1" => a.to_owned(),
+                    "-1" => self.neg(a),
+                    _ => format!(r"\frac{{{}}}{{{}}}", a, b)
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]

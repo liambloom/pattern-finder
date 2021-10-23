@@ -23,10 +23,12 @@ impl Polynomial {
         let mut y_vector: Vec<RatioField<i32>> = Vec::with_capacity(len);
         for point in points {
             for i in range.clone() {
+                // FIXME: These numbers get really freaking big
                 x_matrix.push(point.0.pow(i).into());
             }
             y_vector.push(point.1.into());
         }
+        //println!("{}", Matrix::from_row_slice(len, len, &x_matrix));
         let mut terms: Vec<Term> = (Matrix::from_row_slice(len, len, &x_matrix).try_inverse()? * Vector::from_vec(y_vector))
             .data.as_vec().iter().enumerate().filter(|e| *e.1 != RatioField::zero())
             .map(|i| Term { coefficient: (*i.1).into(), exponent: (len - 1 - i.0) as u8 } )

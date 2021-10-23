@@ -36,3 +36,4 @@ simba = "^0.3"
 math = { path = "math" }
 util = { path = "util" }
 config = { path = "config" }
+inheriting_wrapper = { path="../inheriting_wrapper" }

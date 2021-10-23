@@ -3,12 +3,16 @@ name = "math"
 version = "0.1.0"
 authors = ["liambloom <liamrbloom@gmail.com>"]
 edition = "2018"
+# rust = "idk" <- use this when Fn traits become stable and only do a minor version change
+# https://rust-lang.github.io/rfcs/2495-min-rust-version.html
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+nightly = []
 
 [dependencies]
 util = { path = "../util" }
 config = { path = "../config" }
+inheriting_wrapper = { path = "../../inheriting_wrapper" }
 num = "0.3"
 nalgebra = "0.24"
 paste = "1.0"

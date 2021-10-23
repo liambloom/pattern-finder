@@ -17,6 +17,9 @@ fn main() {
     println!("Setup:");
     println!("Use arrow keys to move, space to select");
 
+    // Unicode detection: https://docs.rs/console/0.14.0/console/struct.Emoji.html
+    // Also https://github.com/microsoft/terminal/issues/1040
+
     let mut fmter_map = IndexMap::new();
     fmter_map.insert(String::from("Unicode"), FmtEnum::Unicode(formatters::Unicode));
     fmter_map.insert(String::from("ASCII"), FmtEnum::ASCII(formatters::ASCII));
@@ -51,13 +54,17 @@ fn main() {
     
     loop {
         let pattern = get_pattern();
-        match Polynomial::from_values(&pattern, 0) {
-            Some(polynomial) => default_output.print(&default_fmt.format(&polynomial)),
-            None => match Exponential::from_values(&pattern) {
-                Some(exponential) => default_output.print(&default_fmt.format(&exponential)),
-                None => println!("No pattern found"),
-            },
+        match Exponential::from_values(&pattern) {
+            Some(exponential) => default_output.print(&default_fmt.format(&exponential)),
+            None => match Polynomial::from_values(&pattern, 0) {
+                Some(polynomial) => default_output.print(&default_fmt.format(&polynomial)),
+                None => match Exponential::from_values(&pattern) {
+                    Some(exponential) => default_output.print(&default_fmt.format(&exponential)),
+                    None => println!("No pattern found"),
+                },
+            }
         }
+        
     }
 }
 

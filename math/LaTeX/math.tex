@@ -1,21 +1,24 @@
 \documentclass[12pt, letterpaper]{article}
 \usepackage{amsmath}
-%\usepackage[utf8]{inputenc} this enables utf-8, and is currently commented out
+\usepackage[utf8]{inputenc} % this enables utf-8, and is currently commented out
 \usepackage{cprotect}
+% \usepackage{tikz}
+% \usepackage[bottom]{footmisc}
+% \usepackage[preprint]{spconfa4}
 \usepackage{hyperref}
 
-\title{How this math works}
+\cprotect\title{The inner workings of \verb|Function::from_points|}
 \author{Liam Bloom}
-\date{\today}
+\date{January 14, 2021}
 
 \begin{document}
 
-\tableofcontents
+\maketitle
 
 \section*{Introduction}
 
 This library takes, as input, a series of $n$ points 
-\((x_0, y_0), (x_1, y_1)\cdots \\(x_{n-2}, y_{n-2}), 
+\((x_0, y_0), (x_1, y_1)\cdots \\ (x_{n-2}, y_{n-2}), 
 (x_{n-1}, y_{n-1})\), and returns {\textit a} \verb|Function| that 
 produces these points. Note that this will not be the only such
 \verb|Function|, only the one that my code feels makes the most sense. 
@@ -27,7 +30,7 @@ how they are calculated.
 {\textbf Form:} \(f(x)=ax^{n-1}+bx^{n-2}\cdots cx^1+d\) \vspace{2ex}
 
 A polynomial of the $n$-th degree, the standard form of which is shown
-above, can be generated from a series of $\geq n$ points using linear
+above, can be generated from a series of $\geq n+1$ points using linear
 algebra. We begin by creating a system of equations:
 
 \[y_0=ax_0^{n-1}+bx_0^{n-2}\cdots cx_0^1+d\]
@@ -37,6 +40,8 @@ algebra. We begin by creating a system of equations:
 \[y_{n-1}=ax_{n-1}^{n-1}+bx_{n-1}^{n-2}\cdots cx_{n-1}^1+d\]
 
 This can be rewritten as a linear algebra equation:
+
+% NOTE: The final row is $1$, NOT \(x^0\), because $d$ is multiplied by 1 even when \(x=0\) (\(0^0\neq 0\))
 
 \[
     \begin{bmatrix} 
@@ -132,6 +137,8 @@ to this library in the future, and if not, why.
         irrational numbers, which is impossible
     \item Logarithmic functions for the same reason as radicals
     \item Conic Sections because they cannot be represented as functions
+    \item Modulus because it would be quite difficult to implement
+    \item \(\frac{|x|}{x}\) because it is very niche
 \end{itemize}
 
 \end{document}
